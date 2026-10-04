@@ -10,10 +10,10 @@ from main import CurrencyConverterApp
 
 @pytest.fixture
 def temp_db():
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_file.close()
     original_db_name = DB_NAME
-    with patch('db.DB_NAME', temp_file.name):
+    with patch("db.DB_NAME", temp_file.name):
         init_db()
         yield temp_file.name
     try:
@@ -24,15 +24,11 @@ def temp_db():
 
 @pytest.fixture
 def sample_data():
-    return {
-        'id': 1,
-        'currency': 'USD',
-        'rate': 1.0
-    }
+    return {"id": 1, "currency": "USD", "rate": 1.0}
 
 
 def test_init_db_creates_table(temp_db):
-    conn = __import__('sqlite3').connect(temp_db)
+    conn = __import__("sqlite3").connect(temp_db)
     cur = conn.cursor()
     cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='rates'")
     result = cur.fetchone()
@@ -55,6 +51,7 @@ def test_save_rate_update_existing(temp_db):
 
 def test_save_rate_date_format(temp_db):
     import sqlite3
+
     save_rate(1, "USD", 78.5)
     conn = sqlite3.connect(temp_db)
     cur = conn.cursor()
@@ -86,7 +83,7 @@ def test_save_rate_parameter_types(temp_db):
 
 
 def test_save_rate_database_connection_error(temp_db):
-    with patch('db.sqlite3.connect', side_effect=Exception("Connection error")):
+    with patch("db.sqlite3.connect", side_effect=Exception("Connection error")):
         try:
             save_rate(1, "USD", 78.5)
         except Exception:
@@ -103,7 +100,7 @@ def test_save_rate_sql_injection_protection(temp_db):
     save_rate(1, malicious, 78.5)
     result = get_saved_rate(malicious)
     assert result == 78.5
-    conn = __import__('sqlite3').connect(temp_db)
+    conn = __import__("sqlite3").connect(temp_db)
     cur = conn.cursor()
     cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='rates'")
     assert cur.fetchone() is not None
@@ -154,7 +151,7 @@ def test_get_saved_rate_sql_injection_protection(temp_db):
 
 
 def test_get_saved_rate_database_connection_error(temp_db):
-    with patch('db.sqlite3.connect', side_effect=Exception("Connection error")):
+    with patch("db.sqlite3.connect", side_effect=Exception("Connection error")):
         try:
             get_saved_rate("USD")
         except Exception:
@@ -164,12 +161,9 @@ def test_get_saved_rate_database_connection_error(temp_db):
 def test_fetch_rates_success():
     mock_response = MagicMock()
     mock_response.json.return_value = {
-        "Valute": {
-            "USD": {"Value": 78.5},
-            "EUR": {"Value": 85.3}
-        }
+        "Valute": {"USD": {"Value": 78.5}, "EUR": {"Value": 85.3}}
     }
-    with patch('api.requests.get', return_value=mock_response):
+    with patch("api.requests.get", return_value=mock_response):
         result = fetch_rates()
     assert result["Valute"]["USD"]["Value"] == 78.5
     assert result["Valute"]["EUR"]["Value"] == 85.3
@@ -178,13 +172,13 @@ def test_fetch_rates_success():
 def test_fetch_rates_success_without_success_field():
     mock_response = MagicMock()
     mock_response.json.return_value = {"Valute": {"USD": {"Value": 78.5}}}
-    with patch('api.requests.get', return_value=mock_response):
+    with patch("api.requests.get", return_value=mock_response):
         result = fetch_rates()
     assert "Valute" in result
 
 
 def test_fetch_rates_http_error():
-    with patch('api.requests.get', side_effect=Exception("HTTP error")):
+    with patch("api.requests.get", side_effect=Exception("HTTP error")):
         try:
             fetch_rates()
         except Exception:
@@ -192,7 +186,7 @@ def test_fetch_rates_http_error():
 
 
 def test_fetch_rates_connection_error():
-    with patch('api.requests.get', side_effect=ConnectionError("Connection failed")):
+    with patch("api.requests.get", side_effect=ConnectionError("Connection failed")):
         try:
             fetch_rates()
         except Exception:
@@ -200,7 +194,7 @@ def test_fetch_rates_connection_error():
 
 
 def test_fetch_rates_timeout_error():
-    with patch('api.requests.get', side_effect=TimeoutError("Timeout")):
+    with patch("api.requests.get", side_effect=TimeoutError("Timeout")):
         try:
             fetch_rates()
         except Exception:
@@ -210,7 +204,7 @@ def test_fetch_rates_timeout_error():
 def test_fetch_rates_empty_valute():
     mock_response = MagicMock()
     mock_response.json.return_value = {"Valute": {}}
-    with patch('api.requests.get', return_value=mock_response):
+    with patch("api.requests.get", return_value=mock_response):
         result = fetch_rates()
     assert result["Valute"] == {}
 
@@ -218,7 +212,7 @@ def test_fetch_rates_empty_valute():
 def test_fetch_rates_malformed_json():
     mock_response = MagicMock()
     mock_response.json.side_effect = ValueError("Invalid JSON")
-    with patch('api.requests.get', return_value=mock_response):
+    with patch("api.requests.get", return_value=mock_response):
         try:
             fetch_rates()
         except Exception:
@@ -226,7 +220,7 @@ def test_fetch_rates_malformed_json():
 
 
 def test_fetch_rates_ssl_error():
-    with patch('api.requests.get', side_effect=Exception("SSL error")):
+    with patch("api.requests.get", side_effect=Exception("SSL error")):
         try:
             fetch_rates()
         except Exception:
@@ -259,7 +253,7 @@ def test_calculate_loan_invalid_loan_amount():
     app = make_app()
     app.loan_var = MagicMock()
     app.loan_var.get.return_value = "abc"
-    with patch('main.messagebox.showerror'):
+    with patch("main.messagebox.showerror"):
         app.calculate_loan()
     assert app.log.called is False
 
@@ -271,7 +265,7 @@ def test_convert_success():
     app.loan_var = MagicMock()
     app.loan_var.get.return_value = "100000"
     app.result_label = MagicMock()
-    with patch('main.get_saved_rate', return_value=78.5):
+    with patch("main.get_saved_rate", return_value=78.5):
         app.convert()
     assert app.result_label.config.called
 
@@ -280,8 +274,9 @@ def test_convert_none_rate():
     app = make_app()
     app.target_var = MagicMock()
     app.target_var.get.return_value = "USD"
-    with patch('main.get_saved_rate', return_value=None), \
-         patch('main.messagebox.showwarning'):
+    with patch("main.get_saved_rate", return_value=None), patch(
+        "main.messagebox.showwarning"
+    ):
         app.convert()
     assert True
 
@@ -292,24 +287,26 @@ def test_convert_exception():
     app.target_var.get.return_value = "USD"
     app.loan_var = MagicMock()
     app.loan_var.get.return_value = "not_a_number"
-    with patch('main.get_saved_rate', return_value=78.5), \
-         patch('main.messagebox.showerror'):
+    with patch("main.get_saved_rate", return_value=78.5), patch(
+        "main.messagebox.showerror"
+    ):
         app.convert()
     assert True
 
 
 def test_update_db_success():
     app = make_app()
-    with patch('main.fetch_rates', return_value={"Valute": {"USD": {"Value": 78.5}}}), \
-         patch('main.save_rate'), \
-         patch('main.messagebox.showinfo'):
+    with patch(
+        "main.fetch_rates", return_value={"Valute": {"USD": {"Value": 78.5}}}
+    ), patch("main.save_rate"), patch("main.messagebox.showinfo"):
         app.update_db()
     assert app.log.called
 
 
 def test_update_db_empty_rates():
     app = make_app()
-    with patch('main.fetch_rates', return_value={"Valute": {}}), \
-         patch('main.messagebox.showinfo'):
+    with patch("main.fetch_rates", return_value={"Valute": {}}), patch(
+        "main.messagebox.showinfo"
+    ):
         app.update_db()
     assert app.log.called

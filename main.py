@@ -85,7 +85,9 @@ class CurrencyConverterApp(tk.Tk):
             return
 
         monthly_rate = annual_rate / 100 / 12
-        monthly_payment = loan * (monthly_rate + monthly_rate / ((1 + monthly_rate) ** months - 1))
+        monthly_payment = loan * (
+            monthly_rate + monthly_rate / ((1 + monthly_rate) ** months - 1)
+        )
         total_payment = monthly_payment * months
         interest = total_payment - loan
 
@@ -100,7 +102,9 @@ class CurrencyConverterApp(tk.Tk):
         rate = get_saved_rate(target)
 
         if rate is None:
-            messagebox.showwarning("Курс не найден", f"Курс {target} не в БД. Нажмите «Обновить курсы».")
+            messagebox.showwarning(
+                "Курс не найден", f"Курс {target} не в БД. Нажмите «Обновить курсы»."
+            )
             return
 
         try:
